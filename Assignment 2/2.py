@@ -48,7 +48,13 @@ if __name__ == '__main__':
     for i in range(corneri.shape[0]):
             corners_list.append([corneri[i], cornerj[i]])
             
-    plt.subplot(1, 2, 1),plt.imshow(img, cmap='gray')
+    plt.subplot(1, 3, 1),plt.imshow(img, cmap='gray')
+    
+    #writing to file all corner points
+    outfile = open('corners_src.txt', 'w')
+    for i in range(100):
+        outfile.write(str(corners_list[i][0]) + ' ' + str(corners_list[i][1]) + '\n')
+    outfile.close()
 
       
     #dst image    
@@ -64,17 +70,30 @@ if __name__ == '__main__':
     for i in range(corneri.shape[0]):
             corners_list1.append([corneri[i], cornerj[i]])
             
-    plt.subplot(1, 2, 2),plt.imshow(img, cmap='gray')
+    plt.subplot(1, 3, 2),plt.imshow(img, cmap='gray')
     
-    plt.show()
-    M, mask = cv2.findHomography(corners_list, corners_list1, cv2.RANSAC, 5.0)
+    #wr;iting t file all corne rpints
+    outfile = open('corners_dst.txt', 'w')
+    for i in range(100):
+        outfile.write(str(corners_list1[i][0]) + ' ' + str(corners_list1[i][1]) + '\n')
+    outfile.close()
+    
+    
+    #converting to nunpy array
+    src_common = [[110.96, 324.813], [94.99, 322.15], [56.4299, 343.433], [43.13, 336.783], [162.83, 282.253], [188.1, 246.343]]
+    dst_common = [[499.9, 36.77], [486.611, 358.062], [442.7, 374.02], [433.41, 364.712], [553.11, 316.833], [574.391, 272.943]]
+    src_pts = np.asarray(src_common)
+    dst_pts = np.asarray(dst_common)
+    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    
+    src_img = cv2.imread('stich2.jpg', 1)
+    warped = cv2.warpPerspective(src_img,M,(4000,2000))
 
-    #create a canvas
-    m = 2000
-    n = 2000
-    M = np.float32([[1,0,100],[0,1,200]])
-    dst = cv2.warpAffine(img,M,(m,n))
-    cv2.imwrite('affine.jpg',dst)
+    plt.subplot(1, 3, 3), plt.imshow(warped, cmap='gray')
+
+    plt.show()
+
+
     
 
 
