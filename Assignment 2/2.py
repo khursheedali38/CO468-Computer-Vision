@@ -35,22 +35,21 @@ def harris(img, sigma=0.0, k=0.04):
     return R
 
 if __name__ == '__main__':
+    
     #detect corners
     dst = cv2.imread('stich1.jpg', 1)
     src = cv2.imread('stich2.jpg', 1)
-    Z = harris(dst)
+    Z = harris(cv2.cvtColor(dst, cv2.COLOR_BGR2GRAY))
     Z = cv2.dilate(Z,None)
-    color_img = cv2.cvtColor(dst, cv2.COLOR_GRAY2RGB)
-    color_img[Z>0.9999999999*Z.max()]=[0,0,255]
+    dst_temp = dst.copy()                         #image with corners marked
+    dst_temp[Z>0.9999999999*Z.max()]=[0,0,255]
+
+
 
     #canvas image dst
     M = np.float32([[1,0,100],[0,1,100]])
-    dst = cv2.warpAffine(color_img, M, (dst.shape[0] * 5,dst.shape[1]*3))
+    dst = cv2.warpAffine(dst, M, (dst.shape[0] * 5,dst.shape[1]*3))
 
-    #plotting to know points of correspondence
-    plt.subplot(1, 2, 1), plt.imshow(dst), plt.title('destination')
-    plt.subplot(1, 2, 2), plt.imshow(src, cmap='gray'), plt.title('source')
-    plt.show()
     
     #finding homography matrix
     dst_common = [[550.5, 160.6], [516, 199], [638.7, 164.6], [712, 158.7], [708, 180.5], [675, 375.5], [721, 329]]
@@ -59,9 +58,9 @@ if __name__ == '__main__':
     dst_pts = np.asarray(dst_common)
     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 
-    #get warped
+    #get warped image
     warped = cv2.warpPerspective(src, M, (dst.shape[1], dst.shape[0]))
-    cv2.imwrite('warped.jpg', warped)
+    cv2.imwrite('perspective image.jpg', warped)
 
     #stich the two images
     for i in range(dst.shape[0]):
@@ -69,7 +68,7 @@ if __name__ == '__main__':
             if(np.linalg.norm(dst[i, j]) == 0):
                 dst[i, j] = warped[i, j]
 
-    cv2.imwrite('finalimage.jpg', dst)
+    cv2.imwrite('stiched image.jpg', dst)
 
     
     
