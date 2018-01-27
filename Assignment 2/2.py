@@ -35,65 +35,44 @@ def harris(img, sigma=0.0, k=0.04):
     return R
 
 if __name__ == '__main__':
-    #src image
-    img = cv2.imread('stich2.jpg', 0)
-    Z = harris(img)
+    #detect corners
+    dst = cv2.imread('stich1.jpg', 1)
+    src = cv2.imread('stich2.jpg', 1)
+    Z = harris(dst)
     Z = cv2.dilate(Z,None)
-    color_img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    color_img = cv2.cvtColor(dst, cv2.COLOR_GRAY2RGB)
     color_img[Z>0.9999999999*Z.max()]=[0,0,255]
-    
-    #save cordinates of corner points of src image
-    corners_list = []
-    corneri, cornerj = np.where(Z>0.9999999999*Z.max())
-    for i in range(corneri.shape[0]):
-            corners_list.append([corneri[i], cornerj[i]])
-            
-    plt.subplot(1, 3, 1),plt.imshow(img, cmap='gray')
-    
-    #writing to file all corner points
-    outfile = open('corners_src.txt', 'w')
-    for i in range(100):
-        outfile.write(str(corners_list[i][0]) + ' ' + str(corners_list[i][1]) + '\n')
-    outfile.close()
 
-      
-    #dst image    
-    img = cv2.imread('stich1.jpg', 0)
-    Z = harris(img)
-    Z = cv2.dilate(Z,None)
-    color_img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-    color_img[Z>0.9999999999*Z.max()]=[0,0,255]
-            
-    #save cordinates of corner points of dst image
-    corners_list1 = []
-    corneri, cornerj = np.where(Z>0.9999999999*Z.max())
-    for i in range(corneri.shape[0]):
-            corners_list1.append([corneri[i], cornerj[i]])
-            
-    plt.subplot(1, 3, 2),plt.imshow(img, cmap='gray')
+    #canvas image dst
+    M = np.float32([[1,0,100],[0,1,100]])
+    dst = cv2.warpAffine(color_img, M, (dst.shape[0] * 5,dst.shape[1]*3))
+
+    #plotting to know points of correspondence
+    plt.subplot(1, 2, 1), plt.imshow(dst), plt.title('destination')
+    plt.subplot(1, 2, 2), plt.imshow(src, cmap='gray'), plt.title('source')
+    plt.show()
     
-    #wr;iting t file all corne rpints
-    outfile = open('corners_dst.txt', 'w')
-    for i in range(100):
-        outfile.write(str(corners_list1[i][0]) + ' ' + str(corners_list1[i][1]) + '\n')
-    outfile.close()
-    
-    
-    #converting to nunpy array
-    src_common = [[110.96, 324.813], [94.99, 322.15], [56.4299, 343.433], [43.13, 336.783], [162.83, 282.253], [188.1, 246.343]]
-    dst_common = [[499.9, 36.77], [486.611, 358.062], [442.7, 374.02], [433.41, 364.712], [553.11, 316.833], [574.391, 272.943]]
+    #finding homography matrix
+    dst_common = [[550.5, 160.6], [516, 199], [638.7, 164.6], [712, 158.7], [708, 180.5], [675, 375.5], [721, 329]]
+    src_common = [[70.4, 21.4], [31.8, 61], [159.5, 35], [231.7, 34.2], [224.8, 55], [192.1, 245], [235.6, 200.5]]
     src_pts = np.asarray(src_common)
     dst_pts = np.asarray(dst_common)
     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+
+    #get warped
+    warped = cv2.warpPerspective(src, M, (dst.shape[1], dst.shape[0]))
+    cv2.imwrite('warped.jpg', warped)
+
+    #stich the two images
+    for i in range(dst.shape[0]):
+        for j in range(dst.shape[1]):
+            if(np.linalg.norm(dst[i, j]) == 0):
+                dst[i, j] = warped[i, j]
+
+    cv2.imwrite('finalimage.jpg', dst)
+
     
-    src_img = cv2.imread('stich2.jpg', 1)
-    warped = cv2.warpPerspective(src_img,M,(4000,2000))
-
-    plt.subplot(1, 3, 3), plt.imshow(warped, cmap='gray')
-
-    plt.show()
-
-
+    
     
 
 
